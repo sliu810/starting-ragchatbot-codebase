@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sendButton = document.getElementById('sendButton');
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
+    newChatButton = document.getElementById('newChatButton');
     
     setupEventListeners();
     createNewSession();
@@ -29,6 +30,10 @@ function setupEventListeners() {
         if (e.key === 'Enter') sendMessage();
     });
     
+    // New Chat button
+    if (newChatButton) {
+        newChatButton.addEventListener('click', startNewChat);
+    }
     
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
@@ -122,10 +127,38 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        // Debug logging to see what we're getting
+        console.log('Sources received:', sources);
+        console.log('First source:', sources[0]);
+        console.log('Type of first source:', typeof sources[0]);
+        
+        // Handle both old string format and new object format for backward compatibility
+        const formattedSources = sources.map((source, index) => {
+            console.log(`Processing source ${index}:`, source, 'Type:', typeof source);
+            
+            if (typeof source === 'string') {
+                // Old format - plain text
+                console.log('Using string format for source:', source);
+                return source;
+            } else if (source && source.text) {
+                // New format - object with text and optional link
+                console.log('Using object format - text:', source.text, 'link:', source.link);
+                if (source.link) {
+                    return `<a href="${source.link}" target="_blank" rel="noopener noreferrer">${source.text}</a>`;
+                } else {
+                    return source.text;
+                }
+            }
+            console.log('Unknown source format, returning fallback');
+            return 'Unknown source';
+        });
+        
+        console.log('Formatted sources:', formattedSources);
+        
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${formattedSources.join(', ')}</div>
             </details>
         `;
     }
@@ -150,6 +183,22 @@ async function createNewSession() {
     currentSessionId = null;
     chatMessages.innerHTML = '';
     addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+}
+
+function startNewChat() {
+    // Clear current session
+    currentSessionId = null;
+    
+    // Clear chat messages
+    chatMessages.innerHTML = '';
+    
+    // Show welcome message
+    addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+    
+    // Focus on input field
+    if (chatInput) {
+        chatInput.focus();
+    }
 }
 
 // Load course statistics
