@@ -18,6 +18,28 @@ cd backend && uv run uvicorn app:app --reload --port 8000
 uv sync
 ```
 
+**Install development dependencies:**
+```bash
+uv sync --group dev
+```
+
+**Code Quality Commands:**
+```bash
+# Format code (black + isort)
+uv run black backend/ main.py
+uv run isort backend/ main.py
+
+# Run linting checks
+uv run flake8 backend/ main.py --max-line-length=88 --extend-ignore=E203,W503
+uv run mypy backend/ main.py --ignore-missing-imports
+
+# Run all quality checks
+./scripts/lint.sh
+
+# Format and run full quality pipeline
+./scripts/quality.sh
+```
+
 **Environment setup:**
 - Copy `.env.example` to `.env` and add your `ANTHROPIC_API_KEY`
 - The application requires Python 3.13+ and uses `uv` for package management
